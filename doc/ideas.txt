@@ -1,0 +1,3 @@
+¿Quieres que ahora forcemos la copia automática al portapapeles usando un botón invisible 
+vía streamlit.components?
+
