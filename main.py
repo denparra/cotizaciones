@@ -197,6 +197,12 @@ elif opcion == "Ver Cotizaciones":
 
         if r_col11.button("Editar", key=f"edit_{row['id']}"):
             st.session_state["edit_id"] = row["id"]
+            st.session_state["scroll_edit"] = True
+
+    st.markdown('<div id="edit_form"></div>', unsafe_allow_html=True)
+    if st.session_state.get("scroll_edit"):
+        components.html('<script>document.getElementById("edit_form").scrollIntoView({behavior:"smooth"});</script>', height=0)
+        st.session_state["scroll_edit"] = False
 
     if st.session_state.get("edit_id"):
         edit_id = st.session_state["edit_id"]
