@@ -197,46 +197,50 @@ elif opcion == "Ver Cotizaciones":
 
         if r_col11.button("Editar", key=f"edit_{row['id']}"):
             st.session_state["edit_id"] = row["id"]
+            st.session_state["scroll_edit"] = True
+
+    st.markdown('<div id="edit_form"></div>', unsafe_allow_html=True)
+    if st.session_state.get("scroll_edit"):
+        components.html('<script>document.getElementById("edit_form").scrollIntoView({behavior:"smooth"});</script>', height=0)
+        st.session_state["scroll_edit"] = False
 
     if st.session_state.get("edit_id"):
         edit_id = st.session_state["edit_id"]
         fila = df[df["id"] == edit_id].iloc[0]
-        with st.modal("Editar cotización"):
-            with st.form("form_editar_inline"):
-                fecha_inicio = st.date_input("Fecha inicio", value=pd.to_datetime(fila["fecha_inicio"]).date())
-                nombre = st.text_input("Nombre cliente", value=fila["nombre_cliente"] or "")
-                correo = st.text_input("Correo", value=fila["correo"] or "")
-                telefono = st.text_input("Teléfono", value=fila["telefono"] or "")
-                auto = st.text_input("Auto", value=fila["auto"] or "")
-                link_auto = st.text_input("Link del auto", value=fila["link_auto"] or "")
-                observacion = st.text_area("Observación", value=fila["observacion"] or "")
-                fecha_ultimo = st.date_input("Fecha último contacto", value=pd.to_datetime(fila["fecha_ultimo_contacto"]).date())
-                visita = st.date_input("Visita programada", value=pd.to_datetime(fila["visita_programada"]).date())
-                estado = st.selectbox(
-                    "Estado",
-                    ["Pendiente", "Visitado", "Cerrado", "Otro"],
-                    index=["Pendiente", "Visitado", "Cerrado", "Otro"].index(fila["estado"] or "Pendiente")
-                )
-                col_b1, col_b2 = st.columns([1, 1])
-                with col_b1:
-                    actualizar = st.form_submit_button("Actualizar")
-                with col_b2:
-                    cancelar = st.form_submit_button("Cancelar")
+        st.subheader("Editar cotización")
+        with st.form("form_editar_inline"):
+            fecha_inicio = st.date_input("Fecha inicio", value=pd.to_datetime(fila["fecha_inicio"]).date())
+            nombre = st.text_input("Nombre cliente", value=fila["nombre_cliente"] or "")
+            correo = st.text_input("Correo", value=fila["correo"] or "")
+            telefono = st.text_input("Teléfono", value=fila["telefono"] or "")
+            auto = st.text_input("Auto", value=fila["auto"] or "")
+            link_auto = st.text_input("Link del auto", value=fila["link_auto"] or "")
+            observacion = st.text_area("Observación", value=fila["observacion"] or "")
+            fecha_ultimo = st.date_input("Fecha último contacto", value=pd.to_datetime(fila["fecha_ultimo_contacto"]).date())
+            visita = st.date_input("Visita programada", value=pd.to_datetime(fila["visita_programada"]).date())
+            estado = st.selectbox(
+                "Estado",
+                ["Pendiente", "Visitado", "Cerrado", "Otro"],
+                index=["Pendiente", "Visitado", "Cerrado", "Otro"].index(fila["estado"] or "Pendiente")
+            )
+            col_b1, col_b2 = st.columns([1, 1])
+            actualizar = col_b1.form_submit_button("Actualizar")
+            cancelar = col_b2.form_submit_button("Cancelar")
 
-            if actualizar:
-                whatsapp = f"https://wa.me/56{telefono.strip()}"
-                data = (
-                    fecha_inicio.isoformat(), nombre.strip(), correo.strip(), telefono.strip(),
-                    auto.strip(), observacion.strip(), fecha_ultimo.isoformat(),
-                    visita.isoformat(), estado, whatsapp,
-                    link_auto.strip()
-                )
-                actualizar_cotizacion(edit_id, data)
-                st.success("✅ Cotización actualizada.")
-                st.session_state.pop("edit_id", None)
-                st.rerun()
-            if cancelar:
-                st.session_state.pop("edit_id", None)
+        if actualizar:
+            whatsapp = f"https://wa.me/56{telefono.strip()}"
+            data = (
+                fecha_inicio.isoformat(), nombre.strip(), correo.strip(), telefono.strip(),
+                auto.strip(), observacion.strip(), fecha_ultimo.isoformat(),
+                visita.isoformat(), estado, whatsapp,
+                link_auto.strip()
+            )
+            actualizar_cotizacion(edit_id, data)
+            st.success("✅ Cotización actualizada.")
+            st.session_state.pop("edit_id", None)
+            st.rerun()
+        if cancelar:
+            st.session_state.pop("edit_id", None)
 
     # --- Edición de cotización por búsqueda ---
     st.subheader("✏️ Buscar para Editar")
