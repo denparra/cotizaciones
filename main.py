@@ -87,6 +87,10 @@ elif opcion == "Nueva Cotización":
                 st.rerun()
 
 elif opcion == "Ver Cotizaciones":
+    st.markdown("""
+    <style>
+    .highlight {background-color:#ffeaa7;border:1px solid #f0b429;border-radius:4px;}
+    </style>""", unsafe_allow_html=True)
     st.header("📑 Cotizaciones Registradas")
     # --- Filtros manuales ---
     with st.expander("🔍 Filtros"):
@@ -163,41 +167,50 @@ elif opcion == "Ver Cotizaciones":
     col11.markdown("**Editar**")
 
     for index, row in df_paginated.iterrows():
-        r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7, r_col8, r_col9, r_col10, r_col11 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2])
-        r_col1.write(row["fecha_inicio"])
-        r_col2.write(row["fecha_ultimo_contacto"])
-        r_col3.write(row["visita_programada"])
-        r_col4.write(row["nombre_cliente"])
-        r_col5.write(row["telefono"])
-        r_col6.write(row["auto"])
-        r_col7.write(row["observacion"])
-    
-        # Genera el mensaje personalizado y la URL de WhatsApp
-        mensaje_personalizado = generar_mensaje(row, mensaje_plantilla)
-        whatsapp_url = f"https://wa.me/56{row['telefono']}?text={urllib.parse.quote(mensaje_personalizado)}"
-    
-        # Botón "Enviar": actualiza el mensaje en session_state y abre WhatsApp
-        if r_col8.button("Ir", key=f"ir_{row['id']}"):
-            st.session_state['mensaje_generado'] = mensaje_personalizado
-            components.html(f"""
-                <script>
-                window.open("https://wa.me/56{row['telefono']}?text={urllib.parse.quote(mensaje_personalizado)}", "_blank");
-                </script>
-            """, height=0)
+        with st.container():
+            seleccionada = st.session_state.get('fila_activa') == row['id']
+            if seleccionada:
+                st.markdown('<div class="highlight">', unsafe_allow_html=True)
 
-    
-        # Columna "Link Auto": maneja posibles valores None
-        link = row.get("link_auto") or ""
-        if link.strip():
-            r_col9.markdown(f"[Auto]({link})", unsafe_allow_html=True)
-        else:
-            r_col9.write("")
-    
-        r_col10.write(row["id"])
+            r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7, r_col8, r_col9, r_col10, r_col11 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2])
+            r_col1.write(row["fecha_inicio"])
+            r_col2.write(row["fecha_ultimo_contacto"])
+            r_col3.write(row["visita_programada"])
+            r_col4.write(row["nombre_cliente"])
+            r_col5.write(row["telefono"])
+            r_col6.write(row["auto"])
+            r_col7.write(row["observacion"])
 
-        if r_col11.button("Editar", key=f"edit_{row['id']}"):
-            st.session_state["edit_id"] = row["id"]
-            st.session_state["scroll_edit"] = True
+            # Genera el mensaje personalizado y la URL de WhatsApp
+            mensaje_personalizado = generar_mensaje(row, mensaje_plantilla)
+            whatsapp_url = f"https://wa.me/56{row['telefono']}?text={urllib.parse.quote(mensaje_personalizado)}"
+
+            # Botón "Enviar": actualiza el mensaje en session_state y abre WhatsApp
+            if r_col8.button("Ir", key=f"ir_{row['id']}"):
+                st.session_state['fila_activa'] = row['id']
+                st.session_state['mensaje_generado'] = mensaje_personalizado
+                components.html(f"""
+                    <script>
+                    window.open("https://wa.me/56{row['telefono']}?text={urllib.parse.quote(mensaje_personalizado)}", "_blank");
+                    </script>
+                """, height=0)
+
+            # Columna "Link Auto": maneja posibles valores None
+            link = row.get("link_auto") or ""
+            if link.strip():
+                r_col9.markdown(f"[Auto]({link})", unsafe_allow_html=True)
+            else:
+                r_col9.write("")
+
+            r_col10.write(row["id"])
+
+            if r_col11.button("Editar", key=f"edit_{row['id']}"):
+                st.session_state['fila_activa'] = row['id']
+                st.session_state["edit_id"] = row["id"]
+                st.session_state["scroll_edit"] = True
+
+            if seleccionada:
+                st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div id="edit_form"></div>', unsafe_allow_html=True)
     if st.session_state.get("scroll_edit"):
@@ -238,9 +251,11 @@ elif opcion == "Ver Cotizaciones":
             actualizar_cotizacion(edit_id, data)
             st.success("✅ Cotización actualizada.")
             st.session_state.pop("edit_id", None)
+            st.session_state.pop('fila_activa', None)
             st.rerun()
         if cancelar:
             st.session_state.pop("edit_id", None)
+            st.session_state.pop('fila_activa', None)
 
     # --- Edición de cotización por búsqueda ---
     st.subheader("✏️ Buscar para Editar")
