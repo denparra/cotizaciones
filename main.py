@@ -3,6 +3,7 @@ import streamlit.components.v1 as components  # Para inyectar HTML/JS
 from utils.db_utils import (
     create_tables,
     agregar_columna_link_auto,
+    agregar_columna_link_chileautos,
     crear_tabla_mensajes,
     obtener_mensajes_whatsapp,
     insertar_cotizacion,
@@ -17,6 +18,7 @@ import urllib.parse
 # Inicializa la base de datos y crea las tablas/columnas necesarias
 create_tables()
 agregar_columna_link_auto()
+agregar_columna_link_chileautos()
 crear_tabla_mensajes()
 
 # Configuración inicial de la app
@@ -64,6 +66,7 @@ elif opcion == "Nueva Cotización":
         telefono = st.text_input("Teléfono (obligatorio)", key="telefono")
         auto = st.text_input("Auto", key="auto")
         link_auto = st.text_input("Link del auto", key="link_auto")
+        link_chileautos = st.text_input("Link ChileA", key="link_chileautos")
         observacion = st.text_area("Observación", key="observacion")
         fecha_ultimo = st.date_input("Fecha último contacto", value=hoy)
         visita = st.date_input("Visita programada", value=hoy)
@@ -79,7 +82,8 @@ elif opcion == "Nueva Cotización":
                     fecha_inicio.isoformat(), nombre.strip(), correo.strip(), telefono.strip(),
                     auto.strip(), observacion.strip(), fecha_ultimo.isoformat(),
                     visita.isoformat(), estado, whatsapp,
-                    link_auto.strip()  # nuevo campo agregado
+                    link_auto.strip(),
+                    link_chileautos.strip()
                 )
                 insertar_cotizacion(data)
                 st.success("✅ Cotización guardada correctamente.")
@@ -158,11 +162,12 @@ elif opcion == "Ver Cotizaciones":
     def generar_mensaje(row, plantilla):
         return plantilla.replace("{{NOMBRE}}", row.get("nombre_cliente") or "") \
                         .replace("{{AUTO}}", row.get("auto") or "") \
-                        .replace("{{LINK_AUTO}}", row.get("link_auto") or "")
+                        .replace("{{LINK_AUTO}}", row.get("link_auto") or "") \
+                        .replace("{{LINK_CHILEA}}", row.get("link_chileautos") or "")
 
     # --- Mostrar tabla interactiva con columnas extendidas ---
     st.markdown("### Lista de Cotizaciones")
-    col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2])
+    col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 2])
     col1.markdown("**Fecha**")
     col2.markdown("**Última vez**")
     col3.markdown("**Visita**")
@@ -172,8 +177,9 @@ elif opcion == "Ver Cotizaciones":
     col7.markdown("**Observación**")
     col8.markdown("**Enviar**")
     col9.markdown("**Link Auto**")
-    col10.markdown("**ID**")
-    col11.markdown("**Editar**")
+    col10.markdown("**ChileA**")
+    col11.markdown("**ID**")
+    col12.markdown("**Editar**")
 
     for index, row in df_paginated.iterrows():
         with st.container():
@@ -184,7 +190,7 @@ elif opcion == "Ver Cotizaciones":
                 texto = valor if isinstance(valor, str) else str(valor)
                 return f'<div class="highlight-cell">{texto}</div>' if seleccionada else texto
 
-            r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7, r_col8, r_col9, r_col10, r_col11 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2])
+            r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7, r_col8, r_col9, r_col10, r_col11, r_col12 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2, 2])
             r_col1.markdown(celda(row["fecha_inicio"]), unsafe_allow_html=True)
             r_col2.markdown(celda(row["fecha_ultimo_contacto"]), unsafe_allow_html=True)
             r_col3.markdown(celda(row["visita_programada"]), unsafe_allow_html=True)
@@ -213,9 +219,15 @@ elif opcion == "Ver Cotizaciones":
             else:
                 r_col9.markdown(celda(""), unsafe_allow_html=True)
 
-            r_col10.markdown(celda(row["id"]), unsafe_allow_html=True)
+            link_ca = row.get("link_chileautos") or ""
+            if link_ca.strip():
+                r_col10.markdown(celda(f"[ChileA]({link_ca})"), unsafe_allow_html=True)
+            else:
+                r_col10.markdown(celda(""), unsafe_allow_html=True)
 
-            if r_col11.button("Editar", key=f"edit_{row['id']}"):
+            r_col11.markdown(celda(row["id"]), unsafe_allow_html=True)
+
+            if r_col12.button("Editar", key=f"edit_{row['id']}"):
                 st.session_state['fila_activa'] = row['id']
                 st.session_state["edit_id"] = row["id"]
                 st.session_state["scroll_edit"] = True
@@ -239,6 +251,7 @@ elif opcion == "Ver Cotizaciones":
             telefono = st.text_input("Teléfono", value=fila["telefono"] or "")
             auto = st.text_input("Auto", value=fila["auto"] or "")
             link_auto = st.text_input("Link del auto", value=fila["link_auto"] or "")
+            link_chileautos = st.text_input("Link ChileA", value=fila["link_chileautos"] or "")
             observacion = st.text_area("Observación", value=fila["observacion"] or "")
             fecha_ultimo = st.date_input("Fecha último contacto", value=pd.to_datetime(fila["fecha_ultimo_contacto"]).date())
             visita = st.date_input("Visita programada", value=pd.to_datetime(fila["visita_programada"]).date())
@@ -257,7 +270,7 @@ elif opcion == "Ver Cotizaciones":
                 fecha_inicio.isoformat(), nombre.strip(), correo.strip(), telefono.strip(),
                 auto.strip(), observacion.strip(), fecha_ultimo.isoformat(),
                 visita.isoformat(), estado, whatsapp,
-                link_auto.strip()
+                link_auto.strip(), link_chileautos.strip()
             )
             actualizar_cotizacion(edit_id, data)
             st.success("✅ Cotización actualizada.")
@@ -293,6 +306,7 @@ elif opcion == "Ver Cotizaciones":
                 telefono = st.text_input("Teléfono", value=fila["telefono"] or "")
                 auto = st.text_input("Auto", value=fila["auto"] or "")
                 link_auto = st.text_input("Link del auto", value=fila["link_auto"] or "")
+                link_chileautos = st.text_input("Link ChileA", value=fila["link_chileautos"] or "")
                 observacion = st.text_area("Observación", value=fila["observacion"] or "")
                 fecha_ultimo = st.date_input("Fecha último contacto", value=pd.to_datetime(fila["fecha_ultimo_contacto"]).date())
                 visita = st.date_input("Visita programada", value=pd.to_datetime(fila["visita_programada"]).date())
@@ -308,7 +322,7 @@ elif opcion == "Ver Cotizaciones":
                     fecha_inicio.isoformat(), nombre.strip(), correo.strip(), telefono.strip(),
                     auto.strip(), observacion.strip(), fecha_ultimo.isoformat(),
                     visita.isoformat(), estado, whatsapp,
-                    link_auto.strip()
+                    link_auto.strip(), link_chileautos.strip()
                 )
                 actualizar_cotizacion(selected_id, data)
                 st.success("✅ Cotización actualizada.")

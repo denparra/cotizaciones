@@ -28,6 +28,7 @@ def preparar_excel(ruta_entrada, ruta_salida=None):
     df["estado"] = "Pendiente"
     df["whatsapp_link"] = df["telefono"].apply(lambda t: f"https://wa.me/56{t}" if t else "")
     df["link_auto"] = ""
+    df["link_chileautos"] = ""
 
     # Guarda si se indicó ruta de salida
     if ruta_salida:
