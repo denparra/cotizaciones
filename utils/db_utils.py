@@ -22,7 +22,9 @@ def create_tables():
                 fecha_ultimo_contacto TEXT,
                 visita_programada TEXT,
                 estado TEXT,
-                whatsapp_link TEXT
+                whatsapp_link TEXT,
+                link_auto TEXT,
+                link_chileautos TEXT
             )
         """)
         con.commit()
@@ -34,6 +36,15 @@ def agregar_columna_link_auto():
         columnas = [col[1] for col in cur.fetchall()]
         if "link_auto" not in columnas:
             cur.execute("ALTER TABLE cotizaciones ADD COLUMN link_auto TEXT")
+            con.commit()
+
+def agregar_columna_link_chileautos():
+    with get_connection() as con:
+        cur = con.cursor()
+        cur.execute("PRAGMA table_info(cotizaciones)")
+        columnas = [col[1] for col in cur.fetchall()]
+        if "link_chileautos" not in columnas:
+            cur.execute("ALTER TABLE cotizaciones ADD COLUMN link_chileautos TEXT")
             con.commit()
 
 def crear_tabla_mensajes():
@@ -88,8 +99,8 @@ def insertar_cotizacion(data):
             INSERT INTO cotizaciones (
                 fecha_inicio, nombre_cliente, correo, telefono, auto,
                 observacion, fecha_ultimo_contacto, visita_programada,
-                estado, whatsapp_link , link_auto
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                estado, whatsapp_link , link_auto, link_chileautos
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, data)
         con.commit()
 
@@ -124,7 +135,7 @@ def actualizar_cotizacion(id_, data):
             UPDATE cotizaciones SET
                 fecha_inicio = ?, nombre_cliente = ?, correo = ?, telefono = ?,
                 auto = ?, observacion = ?, fecha_ultimo_contacto = ?,
-                visita_programada = ?, estado = ?, whatsapp_link = ?, link_auto = ?
+                visita_programada = ?, estado = ?, whatsapp_link = ?, link_auto = ?, link_chileautos = ?
             WHERE id = ?
         """, data + (id_,))
         con.commit()
