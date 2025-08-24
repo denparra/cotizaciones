@@ -87,10 +87,19 @@ elif opcion == "Nueva Cotización":
                 st.rerun()
 
 elif opcion == "Ver Cotizaciones":
-    st.markdown("""
+    st.markdown(
+        """
     <style>
-    .highlight {background-color:#ffeaa7;border:1px solid #f0b429;border-radius:4px;}
-    </style>""", unsafe_allow_html=True)
+    .highlight-cell {
+        background-color:#ffeaa7;
+        border:1px solid #f0b429;
+        border-radius:4px;
+        padding:2px;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
     st.header("📑 Cotizaciones Registradas")
     # --- Filtros manuales ---
     with st.expander("🔍 Filtros"):
@@ -169,21 +178,23 @@ elif opcion == "Ver Cotizaciones":
     for index, row in df_paginated.iterrows():
         with st.container():
             seleccionada = st.session_state.get('fila_activa') == row['id']
-            if seleccionada:
-                st.markdown('<div class="highlight">', unsafe_allow_html=True)
+
+            def celda(valor: str) -> str:
+                """Devuelve el contenido envuelto con la clase de resaltado si corresponde."""
+                texto = valor if isinstance(valor, str) else str(valor)
+                return f'<div class="highlight-cell">{texto}</div>' if seleccionada else texto
 
             r_col1, r_col2, r_col3, r_col4, r_col5, r_col6, r_col7, r_col8, r_col9, r_col10, r_col11 = st.columns([2, 2, 2, 3, 3, 3, 4, 2, 2, 2, 2])
-            r_col1.write(row["fecha_inicio"])
-            r_col2.write(row["fecha_ultimo_contacto"])
-            r_col3.write(row["visita_programada"])
-            r_col4.write(row["nombre_cliente"])
-            r_col5.write(row["telefono"])
-            r_col6.write(row["auto"])
-            r_col7.write(row["observacion"])
+            r_col1.markdown(celda(row["fecha_inicio"]), unsafe_allow_html=True)
+            r_col2.markdown(celda(row["fecha_ultimo_contacto"]), unsafe_allow_html=True)
+            r_col3.markdown(celda(row["visita_programada"]), unsafe_allow_html=True)
+            r_col4.markdown(celda(row["nombre_cliente"]), unsafe_allow_html=True)
+            r_col5.markdown(celda(row["telefono"]), unsafe_allow_html=True)
+            r_col6.markdown(celda(row["auto"]), unsafe_allow_html=True)
+            r_col7.markdown(celda(row["observacion"]), unsafe_allow_html=True)
 
-            # Genera el mensaje personalizado y la URL de WhatsApp
+            # Genera el mensaje personalizado
             mensaje_personalizado = generar_mensaje(row, mensaje_plantilla)
-            whatsapp_url = f"https://wa.me/56{row['telefono']}?text={urllib.parse.quote(mensaje_personalizado)}"
 
             # Botón "Enviar": actualiza el mensaje en session_state y abre WhatsApp
             if r_col8.button("Ir", key=f"ir_{row['id']}"):
@@ -198,23 +209,23 @@ elif opcion == "Ver Cotizaciones":
             # Columna "Link Auto": maneja posibles valores None
             link = row.get("link_auto") or ""
             if link.strip():
-                r_col9.markdown(f"[Auto]({link})", unsafe_allow_html=True)
+                r_col9.markdown(celda(f"[Auto]({link})"), unsafe_allow_html=True)
             else:
-                r_col9.write("")
+                r_col9.markdown(celda(""), unsafe_allow_html=True)
 
-            r_col10.write(row["id"])
+            r_col10.markdown(celda(row["id"]), unsafe_allow_html=True)
 
             if r_col11.button("Editar", key=f"edit_{row['id']}"):
                 st.session_state['fila_activa'] = row['id']
                 st.session_state["edit_id"] = row["id"]
                 st.session_state["scroll_edit"] = True
 
-            if seleccionada:
-                st.markdown('</div>', unsafe_allow_html=True)
-
     st.markdown('<div id="edit_form"></div>', unsafe_allow_html=True)
     if st.session_state.get("scroll_edit"):
-        components.html('<script>document.getElementById("edit_form").scrollIntoView({behavior:"smooth"});</script>', height=0)
+        components.html(
+            '<script>parent.document.getElementById("edit_form").scrollIntoView({behavior:"smooth"});</script>',
+            height=0,
+        )
         st.session_state["scroll_edit"] = False
 
     if st.session_state.get("edit_id"):
