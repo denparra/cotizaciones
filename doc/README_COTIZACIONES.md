@@ -147,3 +147,25 @@ Pandas
 XlsxWriter
 
 Tabulate (para soporte de .to_markdown())
+
+🚀 INSTALACIÓN Y EJECUCIÓN
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/USER/cotizaciones.git
+   cd cotizaciones
+   ```
+2. Crea un entorno virtual e instala las dependencias:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Ejecuta la aplicación con Streamlit:
+   ```bash
+   streamlit run main.py
+   ```
+
+📂 ESTRUCTURA DEL PROYECTO
+- `main.py`: punto de entrada de la aplicación.
+- `run.py`: script alternativo de ejecución.
+- `db/`: archivos de la base de datos SQLite.
+- `utils/`: funciones auxiliares y componentes reutilizables.
+- `doc/`: documentación del proyecto.
